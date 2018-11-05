@@ -1,30 +1,29 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
+using UnityEngine;
 
-[CustomEditor(typeof(MeshSplit))]
-public class MeshSplitEditor : Editor
+namespace MeshGridSplitter
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(MeshSplit))]
+    public class MeshSplitEditor : Editor
     {
-
-        MeshSplit myScript = (MeshSplit)target;
-
-        if (myScript.childen != null && myScript.childen.Count != 0)
-        EditorGUILayout.HelpBox("Submesh count: " + myScript.childen.Count, MessageType.Info, true);
-        else
-        EditorGUILayout.HelpBox("Submesh count: none", MessageType.Info, true);
-
-        DrawDefaultInspector();
-
-        if (GUILayout.Button("Split"))
+        public override void OnInspectorGUI()
         {
-            myScript.Split();
-        }
+            MeshSplit split = (MeshSplit)target;
 
-        if (GUILayout.Button("Clear"))
-        {
-            myScript.Clear();
-        }
+            DrawDefaultInspector();
 
+            if (split.meshToSplit == null)
+            {
+                EditorGUILayout.HelpBox("Mesh to split is null", MessageType.Error);
+            }
+            else if (split.meshToSplit.sharedMesh == null)
+            {
+                EditorGUILayout.HelpBox("MeshFilter has null sharedMesh", MessageType.Error);
+            }
+            else if (GUILayout.Button("Split"))
+            {
+                split.Split();
+            }
+        }
     }
 }
