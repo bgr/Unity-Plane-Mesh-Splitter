@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace MeshGridSplitter
@@ -12,13 +13,17 @@ namespace MeshGridSplitter
 
             DrawDefaultInspector();
 
-            if (split.meshToSplit == null)
+            if (split.meshesToSplit == null || split.meshesToSplit.Length == 0)
             {
-                EditorGUILayout.HelpBox("Mesh to split is null", MessageType.Error);
+                EditorGUILayout.HelpBox("No meshes to split", MessageType.Error);
             }
-            else if (split.meshToSplit.sharedMesh == null)
+            else if (split.meshesToSplit.Any(m => m == null))
             {
-                EditorGUILayout.HelpBox("MeshFilter has null sharedMesh", MessageType.Error);
+                EditorGUILayout.HelpBox("One of the input MeshFilters is null", MessageType.Error);
+            }
+            else if (split.meshesToSplit.Any(m => m.sharedMesh == null))
+            {
+                EditorGUILayout.HelpBox("One of the input MeshFilters has null sharedMesh", MessageType.Error);
             }
             else if (GUILayout.Button("Split"))
             {

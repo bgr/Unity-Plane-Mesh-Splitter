@@ -9,7 +9,7 @@ namespace MeshGridSplitter
 {
     public class MeshSplit : MonoBehaviour
     {
-        public MeshFilter meshToSplit;
+        public MeshFilter[] meshesToSplit;
 
         // draw debug grid when the object is selected
         public bool drawGrid = true;
@@ -23,20 +23,26 @@ namespace MeshGridSplitter
 
         public void Split()
         {
-            var splitter = new Splitter(
-                meshToSplit,
+            Splitter.Split(
+                meshesToSplit,
                 gridSize,
                 axisX, axisY, axisZ
                 );
+        }
 
-            splitter.Split();
+        Bounds GlobalBounds(MeshFilter mf)
+        {
+            Bounds b = mf.sharedMesh.bounds;
+            b.center += mf.transform.position;
+            return b;
         }
 
         void OnDrawGizmosSelected()
         {
-            if (drawGrid && meshToSplit && meshToSplit.sharedMesh)
+            if (drawGrid && meshesToSplit != null && meshesToSplit.Length > 0)
             {
-                Bounds b = meshToSplit.sharedMesh.bounds;
+                Bounds b = GlobalBounds(meshesToSplit[0]);
+                foreach (var m in meshesToSplit) b.Encapsulate(GlobalBounds(m));
 
                 float xSize = Mathf.Ceil(b.extents.x) + gridSize;
                 float ySize = Mathf.Ceil(b.extents.y) + gridSize;
@@ -48,7 +54,7 @@ namespace MeshGridSplitter
                     {
                         for (float x = -xSize; x <= xSize; x += gridSize)
                         {
-                            Vector3 position = meshToSplit.transform.position + new Vector3(x, y, z);
+                            Vector3 position = b.center + new Vector3(x, y, z);
                             Gizmos.DrawWireCube(position, gridSize * Vector3.one);
                         }
                     }
