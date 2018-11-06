@@ -13,7 +13,7 @@ namespace MeshGridSplitter
         public List<MeshFilter> meshesToSplit;
 
         // draw debug grid when the object is selected
-        public bool drawGrid = true;
+        public bool drawGrid = false;
 
         public float gridSize = 16;
 
