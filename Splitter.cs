@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 // TODO: support multiple UV channels
@@ -30,7 +29,7 @@ namespace MeshGridSplitter
         }
     }
 
-    public class Splitter
+    public static class Splitter
     {
         private class SplitterData
         {
@@ -90,30 +89,21 @@ namespace MeshGridSplitter
                     throw new ArgumentException("Grid size must be positive");
                 }
             }
-
         }
 
-        public static void Split(MeshFilter[] sources, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase)
-        {
-            sources
-                .ToList()
-                .ForEach(s => Split(s, gridSize, splitX, splitY, splitZ, rebase));
-        }
-
-        public static void Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase)
+        public static List<GameObject> Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase)
         {
             var data = new SplitterData(source, gridSize, splitX, splitY, splitZ, rebase);
-
             var triDict = MapTrianglesToGridNodes(data);
-
-            var resultGO = new GameObject("[split meshes]");
-            resultGO.transform.position = source.transform.position;
+            var result = new List<GameObject>();
 
             foreach (var kv in triDict)
             {
                 var splitGO = CreateMesh(kv.Key, kv.Value, data);
-                splitGO.transform.SetParent(resultGO.transform, worldPositionStays: false);
+                result.Add(splitGO);
             }
+
+            return result;
         }
 
         private static GameObject CreateMesh(GridCoordinates gridCoordinates, List<int> dictTris, SplitterData data)
@@ -124,7 +114,7 @@ namespace MeshGridSplitter
             newObject.AddComponent<MeshRenderer>();
 
             Vector3 offset = data.rebase ? gridCoordinates.ToVector3() : Vector3.zero;
-            newObject.transform.position = offset;
+            newObject.transform.position = data.sourceFilter.transform.position + offset;
 
             MeshRenderer newRenderer = newObject.GetComponent<MeshRenderer>();
             newRenderer.sharedMaterial = data.sourceRenderer.sharedMaterial;

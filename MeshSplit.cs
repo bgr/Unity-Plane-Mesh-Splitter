@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace MeshGridSplitter
@@ -21,17 +22,39 @@ namespace MeshGridSplitter
         public bool axisY = true;
         public bool axisZ = true;
 
-        [Tooltip("If enabled, all split gameobjects will have 0 local position, otherwise they'll be at \"Grid Size\" increments")]
-        public bool keepPivotsAt0 = false;
+        [Tooltip("If enabled, each split gameobject's pivot will be placed at its grid coordinates, otherwise they'll all have the same pivot based on their source object's pivot")]
+        public bool rebaseToGrid = false;
+        public bool wrapInParentObject = true;
+
 
         public void Split()
         {
-            Splitter.Split(
-                meshesToSplit,
-                gridSize,
-                axisX, axisY, axisZ,
-                rebase: !keepPivotsAt0
-                );
+            var splits = meshesToSplit
+                .Select(mf => Splitter.Split(mf, gridSize, axisX, axisY, axisZ, rebaseToGrid))
+                .ToList();
+
+            if (wrapInParentObject)
+            {
+                Wrap(splits);
+            }
+        }
+
+        static void Wrap(List<List<GameObject>> splits)
+        {
+            var allObjects = splits.SelectMany(go => go).ToList();
+
+            // use center of all objects for parent's position
+            var centers = allObjects.Select(go => go.transform.localPosition == Vector3.zero ? go.GetComponent<MeshFilter>().sharedMesh.bounds.center : go.transform.localPosition).ToList();
+            var bounds = new Bounds(centers[0], Vector3.zero);
+            foreach (var p in centers) bounds.Encapsulate(p);
+
+            var resultGO = new GameObject("[split meshes]");
+            resultGO.transform.position = bounds.center;
+
+            foreach (var ch in allObjects)
+            {
+                ch.transform.SetParent(resultGO.transform, worldPositionStays: true);
+            }
         }
 
         Bounds GlobalBounds(MeshFilter mf)
