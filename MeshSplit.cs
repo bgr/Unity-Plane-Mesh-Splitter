@@ -21,12 +21,16 @@ namespace MeshGridSplitter
         public bool axisY = true;
         public bool axisZ = true;
 
+        [Tooltip("If enabled, all split gameobjects will have 0 local position, otherwise they'll be at \"Grid Size\" increments")]
+        public bool keepPivotsAt0 = false;
+
         public void Split()
         {
             Splitter.Split(
                 meshesToSplit,
                 gridSize,
-                axisX, axisY, axisZ
+                axisX, axisY, axisZ,
+                rebase: !keepPivotsAt0
                 );
         }
 

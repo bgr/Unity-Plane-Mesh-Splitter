@@ -18,9 +18,15 @@ namespace MeshGridSplitter
             value = new Vector3Int(Mathf.RoundToInt(x * precision), Mathf.RoundToInt(y * precision), Mathf.RoundToInt(z * precision));
         }
 
+        public Vector3 ToVector3()
+        {
+            return new Vector3((float)value.x / precision, (float)value.y / precision, (float)value.z / precision);
+        }
+
         public override string ToString()
         {
-            return string.Format("({0},{1},{2})", (float)value.x / precision, (float)value.y / precision, (float)value.z / precision);
+            var vec = ToVector3();
+            return string.Format("GridCoordinates({0}, {1}, {2})", vec.x, vec.y, vec.z);
         }
     }
 
@@ -39,14 +45,16 @@ namespace MeshGridSplitter
             public bool axisX;
             public bool axisY;
             public bool axisZ;
+            public bool rebase;
 
-            public SplitterData(MeshFilter source, float gridSize, bool axisX, bool axisY, bool axisZ)
+            public SplitterData(MeshFilter source, float gridSize, bool axisX, bool axisY, bool axisZ, bool rebase)
             {
                 this.sourceFilter = source;
                 this.gridSize = gridSize;
                 this.axisX = axisX;
                 this.axisY = axisY;
                 this.axisZ = axisZ;
+                this.rebase = rebase;
 
                 sourceFilter = source;
                 sourceRenderer = source.GetComponent<MeshRenderer>();
@@ -85,16 +93,16 @@ namespace MeshGridSplitter
 
         }
 
-        public static void Split(MeshFilter[] sources, float gridSize, bool splitX, bool splitY, bool splitZ)
+        public static void Split(MeshFilter[] sources, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase)
         {
             sources
                 .ToList()
-                .ForEach(s => Split(s, gridSize, splitX, splitY, splitZ));
+                .ForEach(s => Split(s, gridSize, splitX, splitY, splitZ, rebase));
         }
 
-        public static void Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ)
+        public static void Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase)
         {
-            var data = new SplitterData(source, gridSize, splitX, splitY, splitZ);
+            var data = new SplitterData(source, gridSize, splitX, splitY, splitZ, rebase);
 
             var triDict = MapTrianglesToGridNodes(data);
 
@@ -115,6 +123,9 @@ namespace MeshGridSplitter
             newObject.AddComponent<MeshFilter>();
             newObject.AddComponent<MeshRenderer>();
 
+            Vector3 offset = data.rebase ? gridCoordinates.ToVector3() : Vector3.zero;
+            newObject.transform.position = offset;
+
             MeshRenderer newRenderer = newObject.GetComponent<MeshRenderer>();
             newRenderer.sharedMaterial = data.sourceRenderer.sharedMaterial;
 
@@ -125,9 +136,9 @@ namespace MeshGridSplitter
 
             for (int i = 0; i < dictTris.Count; i += 3)
             {
-                verts.Add(data.sourceVertices[dictTris[i]]);
-                verts.Add(data.sourceVertices[dictTris[i + 1]]);
-                verts.Add(data.sourceVertices[dictTris[i + 2]]);
+                verts.Add(data.sourceVertices[dictTris[i]] - offset);
+                verts.Add(data.sourceVertices[dictTris[i + 1]] - offset);
+                verts.Add(data.sourceVertices[dictTris[i + 2]] - offset);
 
                 tris.Add(i);
                 tris.Add(i + 1);
