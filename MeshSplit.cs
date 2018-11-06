@@ -10,7 +10,7 @@ namespace MeshGridSplitter
 {
     public class MeshSplit : MonoBehaviour
     {
-        public MeshFilter[] meshesToSplit;
+        public List<MeshFilter> meshesToSplit;
 
         // draw debug grid when the object is selected
         public bool drawGrid = true;
@@ -25,6 +25,9 @@ namespace MeshGridSplitter
         [Tooltip("If enabled, each split gameobject's pivot will be placed at its grid coordinates, otherwise they'll all have the same pivot based on their source object's pivot")]
         public bool rebaseToGrid = false;
         public bool wrapInParentObject = true;
+
+        // for editor
+        [HideInInspector] public bool populateIncludeDisabled = false;
 
 
         public void Split()
@@ -66,7 +69,7 @@ namespace MeshGridSplitter
 
         void OnDrawGizmosSelected()
         {
-            if (drawGrid && meshesToSplit != null && meshesToSplit.Length > 0)
+            if (drawGrid && meshesToSplit != null && meshesToSplit.Count > 0)
             {
                 Bounds b = GlobalBounds(meshesToSplit[0]);
                 foreach (var m in meshesToSplit) b.Encapsulate(GlobalBounds(m));
