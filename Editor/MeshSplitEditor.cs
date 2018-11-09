@@ -37,6 +37,12 @@ namespace MeshGridSplitter
                 return;
             }
 
+            if (split.drawGrid)
+            {
+                EditorGUILayout.HelpBox("Note: preview grid might not be lined-up with actual split result", MessageType.None);
+            }
+
+
             if (GUILayout.Button("Split"))
             {
                 split.Split();

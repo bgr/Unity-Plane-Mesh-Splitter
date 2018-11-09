@@ -24,6 +24,10 @@ namespace MeshGridSplitter
 
         [Tooltip("If enabled, each split gameobject's pivot will be placed at its grid coordinates, otherwise they'll all have the same pivot based on their source object's pivot")]
         public bool rebaseToGrid = false;
+
+        [Tooltip("If rebaseToGrid is enabled, this transform's position will be used as grid origin (or Vector3.zero if not set)")]
+        public Transform originTransform;
+
         public bool wrapInParentObject = true;
         public bool allow32bitIndices = true;
 
@@ -33,8 +37,10 @@ namespace MeshGridSplitter
 
         public void Split()
         {
+            var origin = originTransform ? originTransform.position : Vector3.zero;
+
             var splits = meshesToSplit
-                .Select(mf => Splitter.Split(mf, gridSize, axisX, axisY, axisZ, rebaseToGrid, allow32bitIndices))
+                .Select(mf => Splitter.Split(mf, gridSize, axisX, axisY, axisZ, rebaseToGrid, origin, allow32bitIndices))
                 .ToList();
 
             if (wrapInParentObject)

@@ -93,10 +93,11 @@ namespace MeshGridSplitter
             }
         }
 
-        public static List<GameObject> Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase, bool allow32bitIndices)
+        public static List<GameObject> Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase, Vector3 rebaseOrigin, bool allow32bitIndices)
         {
             var data = new SplitterData(source, gridSize, splitX, splitY, splitZ, rebase, allow32bitIndices);
-            var triDict = MapTrianglesToGridNodes(data);
+            rebaseOrigin = rebase ? rebaseOrigin : source.transform.position;
+            var triDict = MapTrianglesToGridNodes(data, rebaseOrigin);
             var result = new List<GameObject>();
 
             foreach (var kv in triDict)
@@ -115,8 +116,9 @@ namespace MeshGridSplitter
             newObject.AddComponent<MeshFilter>();
             newObject.AddComponent<MeshRenderer>();
 
-            Vector3 offset = data.rebase ? gridCoordinates.ToVector3() : Vector3.zero;
-            newObject.transform.position = data.sourceFilter.transform.position + offset;
+            newObject.transform.position = data.rebase ? gridCoordinates.ToVector3() : data.sourceFilter.transform.position;
+            // if object position was snapped to grid position, we'll need to shift the vertices by the same amount
+            var vertexOffset = newObject.transform.position - data.sourceFilter.transform.position;
 
             MeshRenderer newRenderer = newObject.GetComponent<MeshRenderer>();
             newRenderer.sharedMaterial = data.sourceRenderer.sharedMaterial;
@@ -128,9 +130,9 @@ namespace MeshGridSplitter
 
             for (int i = 0; i < dictTris.Count; i += 3)
             {
-                verts.Add(data.sourceVertices[dictTris[i]] - offset);
-                verts.Add(data.sourceVertices[dictTris[i + 1]] - offset);
-                verts.Add(data.sourceVertices[dictTris[i + 2]] - offset);
+                verts.Add(data.sourceVertices[dictTris[i]] - vertexOffset);
+                verts.Add(data.sourceVertices[dictTris[i + 1]] - vertexOffset);
+                verts.Add(data.sourceVertices[dictTris[i + 2]] - vertexOffset);
 
                 tris.Add(i);
                 tris.Add(i + 1);
@@ -178,7 +180,7 @@ namespace MeshGridSplitter
             return newObject;
         }
 
-        private static Dictionary<GridCoordinates, List<int>> MapTrianglesToGridNodes(SplitterData data)
+        private static Dictionary<GridCoordinates, List<int>> MapTrianglesToGridNodes(SplitterData data, Vector3 origin)
         {
             /* Create a list of triangle indices from our mesh for every grid node */
 
@@ -192,6 +194,11 @@ namespace MeshGridSplitter
                     (data.sourceVertices[data.sourceTriangles[i]] +
                      data.sourceVertices[data.sourceTriangles[i + 1]] +
                      data.sourceVertices[data.sourceTriangles[i + 2]]) / 3;
+
+                // grid coordinates should be relative to given origin world point
+
+                Vector3 offset = data.sourceFilter.transform.position - origin;
+                currentPoint += offset;
 
                 // calculate coordinates of the closest grid node.
 
