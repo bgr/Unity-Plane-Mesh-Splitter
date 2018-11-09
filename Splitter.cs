@@ -202,9 +202,9 @@ namespace MeshGridSplitter
 
                 // calculate coordinates of the closest grid node.
 
-                currentPoint.x = Mathf.Round(currentPoint.x / data.gridSize) * data.gridSize;
-                currentPoint.y = Mathf.Round(currentPoint.y / data.gridSize) * data.gridSize;
-                currentPoint.z = Mathf.Round(currentPoint.z / data.gridSize) * data.gridSize;
+                currentPoint.x = Mathf.Floor(currentPoint.x / data.gridSize) * data.gridSize;
+                currentPoint.y = Mathf.Floor(currentPoint.y / data.gridSize) * data.gridSize;
+                currentPoint.z = Mathf.Floor(currentPoint.z / data.gridSize) * data.gridSize;
 
                 // ignore an axis if its not enabled
 
