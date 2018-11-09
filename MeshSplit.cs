@@ -25,6 +25,7 @@ namespace MeshGridSplitter
         [Tooltip("If enabled, each split gameobject's pivot will be placed at its grid coordinates, otherwise they'll all have the same pivot based on their source object's pivot")]
         public bool rebaseToGrid = false;
         public bool wrapInParentObject = true;
+        public bool allow32bitIndices = true;
 
         // for editor
         [HideInInspector] public bool populateIncludeDisabled = false;
@@ -33,7 +34,7 @@ namespace MeshGridSplitter
         public void Split()
         {
             var splits = meshesToSplit
-                .Select(mf => Splitter.Split(mf, gridSize, axisX, axisY, axisZ, rebaseToGrid))
+                .Select(mf => Splitter.Split(mf, gridSize, axisX, axisY, axisZ, rebaseToGrid, allow32bitIndices))
                 .ToList();
 
             if (wrapInParentObject)

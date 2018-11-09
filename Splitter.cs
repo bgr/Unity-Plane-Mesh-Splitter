@@ -45,8 +45,9 @@ namespace MeshGridSplitter
             public bool axisY;
             public bool axisZ;
             public bool rebase;
+            public bool allow32bitIndices;
 
-            public SplitterData(MeshFilter source, float gridSize, bool axisX, bool axisY, bool axisZ, bool rebase)
+            public SplitterData(MeshFilter source, float gridSize, bool axisX, bool axisY, bool axisZ, bool rebase, bool allow32bitIndices)
             {
                 this.sourceFilter = source;
                 this.gridSize = gridSize;
@@ -54,6 +55,7 @@ namespace MeshGridSplitter
                 this.axisY = axisY;
                 this.axisZ = axisZ;
                 this.rebase = rebase;
+                this.allow32bitIndices = allow32bitIndices;
 
                 sourceFilter = source;
                 sourceRenderer = source.GetComponent<MeshRenderer>();
@@ -91,9 +93,9 @@ namespace MeshGridSplitter
             }
         }
 
-        public static List<GameObject> Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase)
+        public static List<GameObject> Split(MeshFilter source, float gridSize, bool splitX, bool splitY, bool splitZ, bool rebase, bool allow32bitIndices)
         {
-            var data = new SplitterData(source, gridSize, splitX, splitY, splitZ, rebase);
+            var data = new SplitterData(source, gridSize, splitX, splitY, splitZ, rebase, allow32bitIndices);
             var triDict = MapTrianglesToGridNodes(data);
             var result = new List<GameObject>();
 
@@ -148,8 +150,16 @@ namespace MeshGridSplitter
 
             if (verts.Count >= 65535)
             {
-                Debug.LogWarning("Number of vertices is larger than 65534, mesh might look wrong. Consider using smaller grid size.");
-                // TODO add option to allow 32-bit indices
+                if (data.allow32bitIndices)
+                {
+                    Debug.LogWarning(string.Format("Mesh '{0}' will use 32-bit indices, it has {1} vertices", newObject.name, verts.Count), newObject);
+                    m.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                }
+                else
+                {
+                    Debug.LogWarning(string.Format("Mesh '{0}' has more than 65534 vertices, it'll probably look wrong. " +
+                        "Consider using smaller grid size or enable `allow32bitIndices`", newObject.name), newObject);
+                }
             }
 
             m.vertices = verts.ToArray();
